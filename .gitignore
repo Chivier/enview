@@ -1,0 +1,10 @@
+env
+test
+.vscode
+.idea
+build
+typing
+env.txt
+
+/dist/
+/enview.egg-info/
