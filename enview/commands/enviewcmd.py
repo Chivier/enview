@@ -490,7 +490,7 @@ def save():
 
     with open(filename, "w") as f:
         for key, value in get_environment_vars().items():
-            f.write(f"export {key}={repr(value)[1:-1]}\n")
+            f.write(f"export {key}=\"{repr(value)[1:-1]}\"\n")
     return 0
 
 
@@ -511,6 +511,6 @@ def clip():
     """
     clipstr = ""
     for key, value in get_environment_vars().items():
-        clipstr += f"export {key}={repr(value)[1:-1]}\n"
+        clipstr += f"export {key}=\"{repr(value)[1:-1]}\"\n"
     pyperclip.copy(clipstr)
     return 0
