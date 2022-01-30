@@ -324,7 +324,7 @@ def edit_path_group(selected):
 
     os.system('clear')
     print(f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}")
-    print(f"Move with \"ws\" or \"jk\", Add to front with \"a\", Add to rear with \"A\", Move up or down with \"-=\"")
+    print(f"Move with \"ws\" or \"jk\", Add to rear with \"a\", Add to front with \"A\", Move up or down with \"-=\"")
     print_path_list(path_list)
 
     while info := readchar.readchar():
@@ -338,6 +338,11 @@ def edit_path_group(selected):
             new_path = input("Please enter a new path: ")
             if check_path(new_path):
                 path_list.append(new_path)
+        elif info == 'A':
+            new_path = input("Please enter a new path: ")
+            if check_path(new_path):
+                path_list.insert(0, new_path)
+            selected_path_index += 1
         elif info == '+' or info == '=':
             if selected_path_index < len(path_list) - 1:
                 selected_path_index += 1
@@ -352,7 +357,7 @@ def edit_path_group(selected):
 
         os.system('clear')
         print(f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}")
-        print(f"Move with \"ws\" or \"jk\", Add to front with \"a\", Add to rear with \"A\", Move up or down with \"-=\"")
+        print(f"Move with \"ws\" or \"jk\", Add to rear with \"a\", Add to front with \"A\", Move up or down with \"-=\"")
         path_position, selected_path_index = print_path_list(path_list=path_list,
                                                              position=path_position,
                                                              selected=selected_path_index)
