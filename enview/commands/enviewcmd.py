@@ -100,24 +100,21 @@ def recognize_type(name: str) -> str:
     return "undefined"
 
 
-def get_from_vim(origin_info: str) -> str:
+def get_from_vim(initial_message: str) -> str:
     """
     Get the value from vim.
-    :param origin_info:
+    :param initial_message:
     :return:
     """
 
     editor_name = os.environ.get('EDITOR', 'vim')
 
-    initial_message = origin_info  # if you want to set up the file somehow
-
-    with tempfile.NamedTemporaryFile(suffix=".tmp") as tf:
-        tf.write(initial_message)
+    with tempfile.NamedTemporaryFile(suffix=".enview_tmp") as tf:
+        tf.write(initial_message.encode())
         tf.flush()
         subprocess.call([editor_name, tf.name])
-
         tf.seek(0)
-        edited_message = tf.read()
+        edited_message = tf.read().decode()
         return edited_message
     return ""
 
@@ -221,8 +218,10 @@ def edit_mode(selected):
     env_list = list(env_vars.items())
     key = env_list[selected][0]
     value = env_list[selected][1]
-    print(f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}\n{bcolors.OKBLUE}{value}{bcolors.ENDC}")
-    new_value = input(f"{bcolors.OKGREEN}New value: \n{bcolors.ENDC}")
+    # Without vim editor mode:
+    # print(f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}\n{bcolors.OKBLUE}{value}{bcolors.ENDC}")
+    # new_value = input(f"{bcolors.OKGREEN}New value: \n{bcolors.ENDC}")
+    new_value = get_from_vim(value)
     env_vars[key] = new_value
     os.environ.update(env_vars)
     return True
@@ -359,11 +358,11 @@ def edit_path_group(selected):
         elif info == 'w' or info == 'k':
             selected_path_index -= 1
         elif info == 'a':
-            new_path = input("Please enter a new path: ")
+            new_path = get_from_vim()
             if check_path(new_path):
                 path_list.append(new_path)
         elif info == 'A':
-            new_path = input("Please enter a new path: ")
+            new_path = get_from_vim()
             if check_path(new_path):
                 path_list.insert(0, new_path)
             selected_path_index += 1
@@ -377,6 +376,12 @@ def edit_path_group(selected):
                 selected_path_index -= 1
                 path_list[selected_path_index], path_list[selected_path_index + 1] = \
                     path_list[selected_path_index + 1], path_list[selected_path_index]
+        elif info == 'r':
+            if len(path_list) >= 1:
+                path_list.pop(selected_path_index)
+        elif info == 'e':
+            new_path = get_from_vim(path_list[selected_path_index])
+            path_list[selected_path_index] = new_path
 
         os.system('clear')
         print(f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}")
