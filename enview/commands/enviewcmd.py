@@ -577,7 +577,7 @@ def conflict_checker(varname: str):
         exe_list.append(find_executables(path))
     for index_i in range(0, len(path_list)):
         for index_j in range(index_i + 1, len(path_list)):
-            print(f"Checking {path_list[index_i]} and {path_list[index_j]}, {index_i} and {index_j}")
+            # print(f"Checking {path_list[index_i]} and {path_list[index_j]}, {index_i} and {index_j}")
             intersection_exe = list(set(exe_list[index_i]).intersection(exe_list[index_j]))
             if len(intersection_exe) > 0:
                 print(f"Conflict found between {bcolors.OKBLUE} {path_list[index_i]} {bcolors.ENDC} and "
@@ -587,10 +587,13 @@ def conflict_checker(varname: str):
                 conflict_counter = 0
                 conflict_length = len(intersection_exe)
                 for exe in intersection_exe:
-                    if conflict_counter == 20 or conflict_counter == conflict_length - 1:
-                        print(f"{bcolors.OKGREEN}{exe}{bcolors.ENDC} ...")
+                    if conflict_counter == conflict_length - 1:
+                        print(f"{bcolors.FAIL}{exe}{bcolors.ENDC} .")
                         break
-                    print(f"{bcolors.OKGREEN}{exe}{bcolors.ENDC}", end=", ")
+                    if conflict_counter == 20:
+                        print(f"{bcolors.FAIL}{exe}{bcolors.ENDC} ...")
+                        break
+                    print(f"{bcolors.FAIL}{exe}{bcolors.ENDC}", end=", ")
                     conflict_counter += 1
     return 0
 
@@ -608,7 +611,7 @@ def optimize(varname: str):
     if recognize_type(env_dict[varname]) != "path_group":
         print(f"{varname} is not a path group. No need to check conflicts.")
         return 0
-    path_list = env_dict[varname].split(os.pathsep)
+    path_list = env_dict[varname].split(":")
     index = 0
     while index < len(path_list):
         dup_index = index + 1
@@ -618,6 +621,12 @@ def optimize(varname: str):
             else:
                 dup_index += 1
         index += 1
-    env_dict[varname] = os.pathsep.join(path_list)
+
+    new_value = ""
+    for index in range(len(path_list) - 1):
+        new_value += path_list[index] + ":"
+    new_value += path_list[-1]
+    # print(new_value)
+    os.environ[varname] = new_value
     return 0
 
