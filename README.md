@@ -19,4 +19,5 @@ enview
 For more information, use 'help' command.
 
 ## TODO
-- [ ] Only export modified environment variables
+- [ ] Add env group option
+- [ ] Env group selector
