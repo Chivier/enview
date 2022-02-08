@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="enview",
-    version="0.1.0",
+    version="1.0.0",
     author="Chivier Humber",
     install_requires=[
         'click==8.0.3',

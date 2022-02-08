@@ -9,6 +9,7 @@ import pyperclip
 import re
 import readchar
 from termcolor import cprint
+import tempfile
 
 
 class bcolors:
@@ -97,6 +98,28 @@ def recognize_type(name: str) -> str:
     if check_path(name):
         return "path"
     return "undefined"
+
+
+def get_from_vim(origin_info: str) -> str:
+    """
+    Get the value from vim.
+    :param origin_info:
+    :return:
+    """
+
+    editor_name = os.environ.get('EDITOR', 'vim')
+
+    initial_message = origin_info  # if you want to set up the file somehow
+
+    with tempfile.NamedTemporaryFile(suffix=".tmp") as tf:
+        tf.write(initial_message)
+        tf.flush()
+        subprocess.call([editor_name, tf.name])
+
+        tf.seek(0)
+        edited_message = tf.read()
+        return edited_message
+    return ""
 
 
 def get_environment_vars():
@@ -283,7 +306,7 @@ def print_path_list(path_list, position=0, selected=0):
     :return:
     """
     rows, columns = os.popen('stty size', 'r').read().split()
-    rows = int(rows) - 2
+    rows = int(rows) - 3  # 3 for the header
     columns = int(columns)
 
     if selected < 0:
@@ -324,7 +347,8 @@ def edit_path_group(selected):
 
     os.system('clear')
     print(f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}")
-    print(f"Move with \"ws\" or \"jk\", Add to rear with \"a\", Add to front with \"A\", Move up or down with \"-=\"")
+    print(f"Move with \"ws\" or \"jk\". Add to rear with \"a\". Add to front with \"A\". Change order with \"-=\".")
+    print(f"Edit path with \"e\". Remove path with \"r\". Quit with \"q\".")
     print_path_list(path_list)
 
     while info := readchar.readchar():
@@ -354,10 +378,10 @@ def edit_path_group(selected):
                 path_list[selected_path_index], path_list[selected_path_index + 1] = \
                     path_list[selected_path_index + 1], path_list[selected_path_index]
 
-
         os.system('clear')
         print(f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}")
-        print(f"Move with \"ws\" or \"jk\", Add to rear with \"a\", Add to front with \"A\", Move up or down with \"-=\"")
+        print(f"Move with \"ws\" or \"jk\". Add to rear with \"a\". Add to front with \"A\". Change order with \"-=\".")
+        print(f"Edit path with \"e\". Remove path with \"r\". Quit with \"q\".")
         path_position, selected_path_index = print_path_list(path_list=path_list,
                                                              position=path_position,
                                                              selected=selected_path_index)
