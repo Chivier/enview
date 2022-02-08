@@ -19,5 +19,4 @@ enview
 For more information, use 'help' command.
 
 ## TODO
-- [ ] Auto optimize for conflict variables
 - [ ] Only export modified environment variables

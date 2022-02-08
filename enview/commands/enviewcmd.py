@@ -594,3 +594,30 @@ def conflict_checker(varname: str):
                     conflict_counter += 1
     return 0
 
+
+@command("optimize")
+@argument("varname", description="auto remove duplicates", positional=True, type=str)
+def optimize(varname: str):
+    """
+    if there are duplicates in path group, we will remove the duplicates.
+    """
+    env_dict = get_environment_vars()
+    if varname not in env_dict.keys():
+        print(f"{varname} is not in the environment variables.")
+        return 0
+    if recognize_type(env_dict[varname]) != "path_group":
+        print(f"{varname} is not a path group. No need to check conflicts.")
+        return 0
+    path_list = env_dict[varname].split(os.pathsep)
+    index = 0
+    while index < len(path_list):
+        dup_index = index + 1
+        while dup_index < len(path_list):
+            if path_list[index] == path_list[dup_index]:
+                path_list.pop(dup_index)
+            else:
+                dup_index += 1
+        index += 1
+    env_dict[varname] = os.pathsep.join(path_list)
+    return 0
+
