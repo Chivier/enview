@@ -19,7 +19,5 @@ enview
 For more information, use 'help' command.
 
 ## TODO
-- [ ] Remove path in path group
-- [ ] Edit a single path in path group
-- [ ] Integrate with other editors(vim/nano/emacs)
-- [ ] Check conflict in $PATH
+- [ ] Auto optimize for conflict variables
+- [ ] Only export modified environment variables

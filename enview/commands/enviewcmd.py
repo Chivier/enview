@@ -10,6 +10,9 @@ import re
 import readchar
 from termcolor import cprint
 import tempfile
+from os import listdir
+from os.path import isfile, join
+
 
 
 class bcolors:
@@ -227,6 +230,13 @@ def edit_mode(selected):
     return True
 
 
+def find_executables(mypath: str):
+    if not os.path.exists(mypath):
+        return []
+    onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f)) and os.access(join(mypath, f), os.X_OK)]
+    return onlyfiles
+
+
 def edit_ipv4(selected):
     """
     Edit the environment variable.
@@ -369,13 +379,13 @@ def edit_path_group(selected):
         elif info == '+' or info == '=':
             if selected_path_index < len(path_list) - 1:
                 selected_path_index += 1
-                path_list[selected_path_index], path_list[selected_path_index - 1] = \
-                    path_list[selected_path_index - 1], path_list[selected_path_index]
+                path_list[selected_path_index], path_list[selected_path_index - 1] = path_list[selected_path_index - 1], \
+                                                                                     path_list[selected_path_index]
         elif info == '-':
             if selected_path_index > 0:
                 selected_path_index -= 1
-                path_list[selected_path_index], path_list[selected_path_index + 1] = \
-                    path_list[selected_path_index + 1], path_list[selected_path_index]
+                path_list[selected_path_index], path_list[selected_path_index + 1] = path_list[selected_path_index + 1], \
+                                                                                     path_list[selected_path_index]
         elif info == 'r':
             if len(path_list) >= 1:
                 path_list.pop(selected_path_index)
@@ -387,11 +397,8 @@ def edit_path_group(selected):
         print(f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}")
         print(f"Move with \"ws\" or \"jk\". Add to rear with \"a\". Add to front with \"A\". Change order with \"-=\".")
         print(f"Edit path with \"e\". Remove path with \"r\". Quit with \"q\".")
-        path_position, selected_path_index = print_path_list(path_list=path_list,
-                                                             position=path_position,
-                                                             selected=selected_path_index)
-        # print(f"position = {path_position}, index = {selected_path_index}")
-
+        path_position, selected_path_index = print_path_list(path_list=path_list, position=path_position,
+                                                             selected=selected_path_index)  # print the list
     new_path_group = ":".join(path_list)
     print(new_path_group)
     env_vars[key] = new_path_group
@@ -548,3 +555,42 @@ def clip():
         clipstr += f"export {key}=\"{repr(value)[1:-1]}\"\n"
     pyperclip.copy(clipstr)
     return 0
+
+
+@command("conflict")
+@argument("varname", description="the variable to be checked", positional=True, type=str)
+def conflict_checker(varname: str):
+    """
+    Check if there is any conflict between the environment variables and the
+    current environment variables.
+    """
+    env_dict = get_environment_vars()
+    if varname not in env_dict.keys():
+        print(f"{varname} is not in the environment variables.")
+        return 0
+    if recognize_type(env_dict[varname]) != "path_group":
+        print(f"{varname} is not a path group. No need to check conflicts.")
+        return 0
+    path_list = env_dict[varname].split(os.pathsep)
+    exe_list = []
+    for path in path_list:
+        exe_list.append(find_executables(path))
+    for index_i in range(0, len(path_list)):
+        for index_j in range(index_i + 1, len(path_list)):
+            print(f"Checking {path_list[index_i]} and {path_list[index_j]}, {index_i} and {index_j}")
+            intersection_exe = list(set(exe_list[index_i]).intersection(exe_list[index_j]))
+            if len(intersection_exe) > 0:
+                print(f"Conflict found between {bcolors.OKBLUE} {path_list[index_i]} {bcolors.ENDC} and "
+                      f"{bcolors.OKBLUE} {path_list[index_j]} {bcolors.ENDC}."
+                      f" We will use executable in {bcolors.OKBLUE} {path_list[index_i]} {bcolors.ENDC} first.")
+                print(f"The following executables are in both:")
+                conflict_counter = 0
+                conflict_length = len(intersection_exe)
+                for exe in intersection_exe:
+                    if conflict_counter == 20 or conflict_counter == conflict_length - 1:
+                        print(f"{bcolors.OKGREEN}{exe}{bcolors.ENDC} ...")
+                        break
+                    print(f"{bcolors.OKGREEN}{exe}{bcolors.ENDC}", end=", ")
+                    conflict_counter += 1
+    return 0
+
