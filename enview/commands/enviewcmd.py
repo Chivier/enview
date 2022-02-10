@@ -3,16 +3,72 @@ import asyncio
 import socket
 import typing
 import sys
-import subprocess
 import os
 import pyperclip
 import re
 import readchar
 from termcolor import cprint
-import tempfile
 from os import listdir
 from os.path import isfile, join
+from prompt_toolkit import prompt
 
+
+# initialize the module
+# to be compatible with both Linux and Windows
+OS_NAME = os.name
+if OS_NAME == 'posix':
+    SYSTEM_TYPE = 'Linux'
+    CLEAR_COMMAND = 'clear'
+    PATH_PATTERN = r'(\${[a-zA-Z_][a-zA-Z0-9_]*}|\$[a-zA-Z_][a-zA-Z0-9_]*|\/.*)' \
+                    r'(/\${[a-zA-Z_][a-zA-Z0-9_]*}|/\$[a-zA-Z_][a-zA-Z0-9_]*|\/.*)*'
+    PATH_SEPARATOR = ':'
+    SAVE_FILE = 'env.txt'
+    SCRIPT_PATTERN = "export {}=\"{}\"\n"
+elif OS_NAME == 'nt':
+    SYSTEM_TYPE = 'Windows'
+    CLEAR_COMMAND = 'powershell clear'
+    PATH_PATTERN = r'([A-Z][:].*)'
+    PATH_SEPARATOR = ';'
+    # SAVE_FILE = 'env.bat'
+    # SCRIPT_PATTERN = "set {}={}\n"
+    SAVE_FILE = 'env.ps1'
+    SCRIPT_PATTERN = "${{env:{}}}=\"{}\"\n"
+else:
+    exit("System not supported.")
+
+# if using powershell in Windows Terminal, color patterns are correctly interpreted
+# but when using in Windows PowerShell, Command Prompt, or double clicking on enview.exe, color patterns will work after executing a `powershell clear` command
+os.system(CLEAR_COMMAND)
+print("Running on " + SYSTEM_TYPE)
+
+
+def get_char() -> str:
+    '''
+    Reads the next char from stdin
+    :return: string with length 1
+    '''
+    if OS_NAME == 'posix':
+        return readchar.readchar()
+    elif OS_NAME == 'nt':
+        # > https://github.com/magmax/python-readchar
+        # > Sadly, this library has only being probed on GNU/Linux. Please, if you can try it in another OS and find a bug, put an issue or send the pull-request.
+        # seems that on Windows it returns a byte
+        # and a UnicodeDecodeError raises when pressing arror keys
+        # although both of these are said fixed, but they happen on my case
+        # > https://github.com/magmax/python-readchar/issues/37
+        # > https://github.com/magmax/python-readchar/issues/66
+        while(True):
+            try:
+                c = readchar.readchar()
+                break
+            except:
+                continue
+        if type(c) == str:
+            return c
+        elif type(c) == bytes:
+            return bytes.decode(c)
+        else:
+            exit("module readchar exception")
 
 
 class bcolors:
@@ -62,8 +118,7 @@ def check_path(path: str) -> bool:
     :param path:
     :return: bool
     """
-    if re.match(r'(\${[a-zA-Z_][a-zA-Z0-9_]*}|\$[a-zA-Z_][a-zA-Z0-9_]*|\/.*)'
-                r'(/\${[a-zA-Z_][a-zA-Z0-9_]*}|/\$[a-zA-Z_][a-zA-Z0-9_]*|\/.*)*', path):
+    if re.match(PATH_PATTERN, path):
         return True
     else:
         return False
@@ -77,9 +132,14 @@ def check_path_group(path: str) -> bool:
 
     WARNING: This function might conflict with `check_path`, since we cannot check if there are colons(:) in the path.
     """
-    if path.find(':') == -1:
+    if path.find(PATH_SEPARATOR) == -1:
         return False
-    path_list = path.split(':')
+    # again, if using powershell in Windows Terminal, it works fine
+    # but when using in Windows PowerShell, Command Prompt, or double clicking on enview.exe, 'Path' variable will end with a separator character ';'
+    # causing the last element in path_list a string in length 0
+    if path[len(path) - 1] == PATH_SEPARATOR:
+        path = path[:-1]
+    path_list = path.split(PATH_SEPARATOR)
     for item in path_list:
         if not check_path(item):
             return False
@@ -103,23 +163,14 @@ def recognize_type(name: str) -> str:
     return "undefined"
 
 
-def get_from_vim(initial_message: str) -> str:
+def full_screen_edit(initial_message: str) -> str:
     """
-    Get the value from vim.
+    Edit text in full screen.
     :param initial_message:
     :return:
     """
-
-    editor_name = os.environ.get('EDITOR', 'vim')
-
-    with tempfile.NamedTemporaryFile(suffix=".enview_tmp") as tf:
-        tf.write(initial_message.encode())
-        tf.flush()
-        subprocess.call([editor_name, tf.name])
-        tf.seek(0)
-        edited_message = tf.read().decode()
-        return edited_message
-    return ""
+    os.system(CLEAR_COMMAND)
+    return prompt('', default=initial_message)
 
 
 def get_environment_vars():
@@ -154,7 +205,7 @@ def print_env_list(position=0, selected=0):
     :return: Updated position and selected.
     """
     env_vars = get_environment_vars()
-    rows, columns = os.popen('stty size', 'r').read().split()
+    columns, rows = os.get_terminal_size()
     rows = int(rows) - 1
     columns = int(columns)
     name_width = int((columns - 3) * 0.4)
@@ -216,15 +267,12 @@ def edit_mode(selected):
     :param selected:
     :return:
     """
-    os.system('clear')
+    os.system(CLEAR_COMMAND)
     env_vars = get_environment_vars()
     env_list = list(env_vars.items())
     key = env_list[selected][0]
     value = env_list[selected][1]
-    # Without vim editor mode:
-    # print(f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}\n{bcolors.OKBLUE}{value}{bcolors.ENDC}")
-    # new_value = input(f"{bcolors.OKGREEN}New value: \n{bcolors.ENDC}")
-    new_value = get_from_vim(value)
+    new_value = full_screen_edit(value)
     env_vars[key] = new_value
     os.environ.update(env_vars)
     return True
@@ -243,7 +291,7 @@ def edit_ipv4(selected):
     :param selected:
     :return:
     """
-    os.system('clear')
+    os.system(CLEAR_COMMAND)
     env_vars = get_environment_vars()
     env_list = list(env_vars.items())
     key = env_list[selected][0]
@@ -266,7 +314,7 @@ def edit_ipv6(selected):
     :param selected:
     :return:
     """
-    os.system('clear')
+    os.system(CLEAR_COMMAND)
     env_vars = get_environment_vars()
     env_list = list(env_vars.items())
     key = env_list[selected][0]
@@ -289,7 +337,7 @@ def edit_path(selected):
     :param selected:
     :return:
     """
-    os.system('clear')
+    os.system(CLEAR_COMMAND)
     env_vars = get_environment_vars()
     env_list = list(env_vars.items())
     key = env_list[selected][0]
@@ -314,7 +362,7 @@ def print_path_list(path_list, position=0, selected=0):
     :param selected:
     :return:
     """
-    rows, columns = os.popen('stty size', 'r').read().split()
+    columns, rows = os.get_terminal_size()
     rows = int(rows) - 3  # 3 for the header
     columns = int(columns)
 
@@ -352,15 +400,15 @@ def edit_path_group(selected):
     value = env_list[selected][1]
     selected_path_index = 0
     path_position = 0
-    path_list = value.split(":")
+    path_list = value.split(PATH_SEPARATOR)
 
-    os.system('clear')
+    os.system(CLEAR_COMMAND)
     print(f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}")
     print(f"Move with \"ws\" or \"jk\". Add to rear with \"a\". Add to front with \"A\". Change order with \"-=\".")
     print(f"Edit path with \"e\". Remove path with \"r\". Quit with \"q\".")
     print_path_list(path_list)
 
-    while info := readchar.readchar():
+    while info := get_char():
         if info == 'q':
             break
         elif info == 's' or info == 'j':
@@ -368,11 +416,11 @@ def edit_path_group(selected):
         elif info == 'w' or info == 'k':
             selected_path_index -= 1
         elif info == 'a':
-            new_path = get_from_vim()
+            new_path = full_screen_edit()
             if check_path(new_path):
                 path_list.append(new_path)
         elif info == 'A':
-            new_path = get_from_vim()
+            new_path = full_screen_edit()
             if check_path(new_path):
                 path_list.insert(0, new_path)
             selected_path_index += 1
@@ -390,16 +438,16 @@ def edit_path_group(selected):
             if len(path_list) >= 1:
                 path_list.pop(selected_path_index)
         elif info == 'e':
-            new_path = get_from_vim(path_list[selected_path_index])
+            new_path = full_screen_edit(path_list[selected_path_index])
             path_list[selected_path_index] = new_path
 
-        os.system('clear')
+        os.system(CLEAR_COMMAND)
         print(f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}")
         print(f"Move with \"ws\" or \"jk\". Add to rear with \"a\". Add to front with \"A\". Change order with \"-=\".")
         print(f"Edit path with \"e\". Remove path with \"r\". Quit with \"q\".")
         path_position, selected_path_index = print_path_list(path_list=path_list, position=path_position,
                                                              selected=selected_path_index)  # print the list
-    new_path_group = ":".join(path_list)
+    new_path_group = PATH_SEPARATOR.join(path_list)
     print(new_path_group)
     env_vars[key] = new_path_group
     os.environ.update(env_vars)
@@ -411,7 +459,7 @@ def intelligent_edit_mode(selected):
     :param selected:
     :return:
     """
-    os.system('clear')
+    os.system(CLEAR_COMMAND)
     env_vars = get_environment_vars()
     env_list = list(env_vars.items())
     key = env_list[selected][0]
@@ -452,13 +500,13 @@ def select():
     Search with "/" and move with "nN"
     quit with "q"
     """
-    os.system('clear')
+    os.system(CLEAR_COMMAND)
     position = 0
     selected = 0
     print_env_list()
     search_list = []
     search_index = 0
-    while info := readchar.readchar():
+    while info := get_char():
         if info == 's' or info == 'j':
             # move down
             selected += 1
@@ -509,10 +557,10 @@ def select():
         elif info == 'i':
             intelligent_edit_mode(selected)
 
-        os.system('clear')
+        os.system(CLEAR_COMMAND)
         position, selected = print_env_list(position=position, selected=selected)
 
-    os.system('clear')
+    os.system(CLEAR_COMMAND)
 
 
 @command("save")
@@ -520,9 +568,9 @@ def save():
     """
     Save environment variables.
     """
-    filename = input("Save file name: (Default: env.txt)\n").strip()
+    filename = input("Save file name: (Default: " + SAVE_FILE + ")\n").strip()
     if filename == "":
-        filename = "env.txt"
+        filename = SAVE_FILE
     if os.path.exists(filename):
         print("File already exists. Overwrite? ([y]/n)")
         flag = input().strip().lower()
@@ -531,7 +579,7 @@ def save():
 
     with open(filename, "w") as f:
         for key, value in get_environment_vars().items():
-            f.write(f"export {key}=\"{repr(value)[1:-1]}\"\n")
+            f.write(SCRIPT_PATTERN.format(key, value))
     return 0
 
 
@@ -552,7 +600,7 @@ def clip():
     """
     clipstr = ""
     for key, value in get_environment_vars().items():
-        clipstr += f"export {key}=\"{repr(value)[1:-1]}\"\n"
+        clipstr += SCRIPT_PATTERN.format(key, value)
     pyperclip.copy(clipstr)
     return 0
 
