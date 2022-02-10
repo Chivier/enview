@@ -291,6 +291,7 @@ def edit_ipv4(selected):
     :param selected:
     :return:
     """
+    # clear the current value of the enviroment variable
     os.system(CLEAR_COMMAND)
     env_vars = get_environment_vars()
     env_list = list(env_vars.items())
@@ -362,6 +363,7 @@ def print_path_list(path_list, position=0, selected=0):
     :param selected:
     :return:
     """
+    # return the position of the selected rows
     columns, rows = os.get_terminal_size()
     rows = int(rows) - 3  # 3 for the header
     columns = int(columns)
