@@ -4,6 +4,9 @@ Enview (environment viewer) is a simple, fast, and powerful environment viewer (
 
 ![show](resources/show.gif)
 
+## OS Surpport
+It now supports Linux and Windows.
+
 ## Dependencies
 - Python (`>=3.8`)
 
