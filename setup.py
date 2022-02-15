@@ -2,9 +2,12 @@ import pathlib
 from setuptools import setup, find_packages
 
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
 setup(
     name="enview",
-    version="1.0.0",
+    version="1.0.1",
     author="Chivier Humber",
     install_requires=[
         'click==8.0.3',
@@ -27,10 +30,14 @@ setup(
         'typing_extensions==4.0.1',
         'wcwidth==0.2.5'
     ],
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/Chivier/enview",
+    author_email="chivier.humber@outlook.com",
     entry_points={
         "console_scripts": ["enview=enview.enview:main"],
     },
-    license="MIT",
+    license="Apache-2.0 License",
     keywords="translator",
     packages=find_packages(),
 )
