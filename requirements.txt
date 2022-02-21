@@ -10,7 +10,6 @@ prettytable==3.0.0
 prompt-toolkit==3.0.26
 Pygments==2.11.2
 pyparsing==3.0.7
-pyperclip==1.8.2
 python-nubia==0.2b5
 readchar==3.0.5
 termcolor==1.1.0

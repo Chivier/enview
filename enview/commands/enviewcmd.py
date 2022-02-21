@@ -4,7 +4,6 @@ import socket
 import typing
 import sys
 import os
-import pyperclip
 import re
 import readchar
 from termcolor import cprint
@@ -592,18 +591,6 @@ def setenv(name: str, value: str):
     Set environment variable.
     """
     os.environ[name] = value
-    return 0
-
-
-@command("clip")
-def clip():
-    """
-    clip all the variables to the clipboard.
-    """
-    clipstr = ""
-    for key, value in get_environment_vars().items():
-        clipstr += SCRIPT_PATTERN.format(key, value)
-    pyperclip.copy(clipstr)
     return 0
 
 
