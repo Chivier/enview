@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="enview",
-    version="1.0.3",
+    version="1.0.4",
     author="Chivier Humber",
     install_requires=[
         'click==8.0.3',
