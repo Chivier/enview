@@ -3,6 +3,8 @@ import asyncio
 import socket
 import typing
 import sys
+import tempfile
+import subprocess
 import os
 import re
 import readchar
@@ -168,8 +170,16 @@ def full_screen_edit(initial_message: str) -> str:
     :param initial_message:
     :return:
     """
-    os.system(CLEAR_COMMAND)
-    return prompt('', default=initial_message)
+    editor_name = os.environ.get('EDITOR', 'vim')
+
+    with tempfile.NamedTemporaryFile(suffix=".enview_tmp") as tf:
+        tf.write(initial_message.encode())
+        tf.flush()
+        subprocess.call([editor_name, tf.name])
+        tf.seek(0)
+        edited_message = tf.read().decode()
+        return edited_message
+    return ""
 
 
 def get_environment_vars():
@@ -417,11 +427,13 @@ def edit_path_group(selected):
         elif info == 'w' or info == 'k':
             selected_path_index -= 1
         elif info == 'a':
-            new_path = full_screen_edit()
+            new_path = full_screen_edit("")
+            new_path = new_path.translate({ord(c):None for c in ' \n\t\r'})
             if check_path(new_path):
                 path_list.append(new_path)
         elif info == 'A':
-            new_path = full_screen_edit()
+            new_path = full_screen_edit("")
+            new_path = new_path.translate({ord(c):None for c in ' \n\t\r'})
             if check_path(new_path):
                 path_list.insert(0, new_path)
             selected_path_index += 1

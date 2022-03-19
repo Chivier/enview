@@ -7,11 +7,10 @@ with open("README.md", "r") as fh:
 
 setup(
     name="enview",
-    version="1.0.1",
+    version="1.0.3",
     author="Chivier Humber",
     install_requires=[
         'click==8.0.3',
-        'edit==0.0.4',
         'fuzzywuzzy==0.18.0',
         'jellyfish==0.9.0',
         'mypy-extensions==0.4.3',
