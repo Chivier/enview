@@ -42,7 +42,7 @@ known-first-party = ["enview"]
 "check_versions.py" = ["T201"]  # allow print statements in check script
 
 [tool.bumpver]
-current_version = "1.0.4"
+current_version = "1.0.5"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "Build: bump version {old_version} -> {new_version}"
 commit = true
