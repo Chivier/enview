@@ -1,0 +1,58 @@
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "DTZ",    # flake8-datetimez
+    "T20",    # flake8-print
+    "SIM",    # flake8-simplify
+    "RUF",    # Ruff-specific rules
+]
+ignore = [
+    "E501",   # line too long
+    "B008",   # do not perform function calls in argument defaults
+    "C408",   # unnecessary dict/list/tuple call
+    "T201",   # print statements (allow them in scripts)
+]
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint.isort]
+known-first-party = ["enview"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]  # unused imports in __init__.py files
+"tests/*" = ["T20"]       # allow print statements in tests
+"lint.py" = ["T201"]      # allow print statements in lint script
+"check_versions.py" = ["T201"]  # allow print statements in check script
+
+[tool.bumpver]
+current_version = "1.0.4"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message = "Build: bump version {old_version} -> {new_version}"
+commit = true
+tag = true
+push = false
+
+[tool.bumpver.file_patterns]
+"setup.py" = [
+    'version="{version}"',
+]
+"enview/__init__.py" = [
+    '__version__ = "{version}"',
+]

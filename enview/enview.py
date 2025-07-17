@@ -1,7 +1,7 @@
-# -*- coding:utf-8 -*-
-
 import sys
+
 from nubia import Nubia, Options
+
 import enview.commands
 
 
