@@ -60,17 +60,17 @@ def get_char() -> str:
             try:
                 c = readchar.readchar()
                 break
-            except:
+            except Exception:
                 continue
-        if type(c) == str:
+        if isinstance(c, str):
             return c
-        elif type(c) == bytes:
+        elif isinstance(c, bytes):
             return bytes.decode(c)
         else:
             exit("module readchar exception")
 
 
-class bcolors:
+class BColors:
     """
     Colors for printing
     """
@@ -118,10 +118,7 @@ def check_path(path: str) -> bool:
     :param path:
     :return: bool
     """
-    if re.match(PATH_PATTERN, path):
-        return True
-    else:
-        return False
+    return bool(re.match(PATH_PATTERN, path))
 
 
 def check_path_group(path: str) -> bool:
@@ -140,10 +137,7 @@ def check_path_group(path: str) -> bool:
     if path[len(path) - 1] == PATH_SEPARATOR:
         path = path[:-1]
     path_list = path.split(PATH_SEPARATOR)
-    for item in path_list:
-        if not check_path(item):
-            return False
-    return True
+    return all(check_path(item) for item in path_list)
 
 
 def recognize_type(name: str) -> str:
@@ -264,9 +258,9 @@ def print_env_list(position=0, selected=0):
             cprint(compress_str(value, value_width - 2), "yellow", end="")
         else:
             name_str = compress_str(key, name_width - 2)
-            name_str = f"{bcolors.WHITE}{name_str}{bcolors.ENDC}"
+            name_str = f"{BColors.WHITE}{name_str}{BColors.ENDC}"
             value_str = compress_str(value, value_width - 2)
-            value_str = f"{bcolors.WHITE}{value_str}{bcolors.ENDC}"
+            value_str = f"{BColors.WHITE}{value_str}{BColors.ENDC}"
             print(name_str, end="")
             cprint(" | ", "green", end="")
             print(value_str, end="")
@@ -317,18 +311,18 @@ def edit_ipv4(selected):
     key = env_list[selected][0]
     value = env_list[selected][1]
     print(
-        f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}\n{bcolors.OKBLUE}{value}{bcolors.ENDC}"
+        f"{BColors.OKGREEN}Current value: {BColors.ENDC}\n{BColors.OKBLUE}{value}{BColors.ENDC}"
     )
     print(
-        f"{bcolors.OKGREEN}Suggested type: {bcolors.ENDC}\n{bcolors.FAIL}IPV4{bcolors.ENDC}"
+        f"{BColors.OKGREEN}Suggested type: {BColors.ENDC}\n{BColors.FAIL}IPV4{BColors.ENDC}"
     )
-    new_value = input(f"{bcolors.OKGREEN}New value: \n{bcolors.ENDC}")
+    new_value = input(f"{BColors.OKGREEN}New value: \n{BColors.ENDC}")
     if check_ipv4(new_value):
         env_vars[key] = new_value
         os.environ.update(env_vars)
         return selected
     else:
-        print(f"{bcolors.FAIL}Invalid IPv4 address.{bcolors.ENDC}")
+        print(f"{BColors.FAIL}Invalid IPv4 address.{BColors.ENDC}")
         return selected
 
 
@@ -344,18 +338,18 @@ def edit_ipv6(selected):
     key = env_list[selected][0]
     value = env_list[selected][1]
     print(
-        f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}\n{bcolors.OKBLUE}{value}{bcolors.ENDC}"
+        f"{BColors.OKGREEN}Current value: {BColors.ENDC}\n{BColors.OKBLUE}{value}{BColors.ENDC}"
     )
     print(
-        f"{bcolors.OKGREEN}Suggested type: {bcolors.ENDC}\n{bcolors.FAIL}IPV6{bcolors.ENDC}"
+        f"{BColors.OKGREEN}Suggested type: {BColors.ENDC}\n{BColors.FAIL}IPV6{BColors.ENDC}"
     )
-    new_value = input(f"{bcolors.OKGREEN}New value: \n{bcolors.ENDC}")
+    new_value = input(f"{BColors.OKGREEN}New value: \n{BColors.ENDC}")
     if check_ipv6(new_value):
         env_vars[key] = new_value
         os.environ.update(env_vars)
         return selected
     else:
-        print(f"{bcolors.FAIL}Invalid IPv6 address.{bcolors.ENDC}")
+        print(f"{BColors.FAIL}Invalid IPv6 address.{BColors.ENDC}")
         return selected
 
 
@@ -371,18 +365,18 @@ def edit_path(selected):
     key = env_list[selected][0]
     value = env_list[selected][1]
     print(
-        f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}\n{bcolors.OKBLUE}{value}{bcolors.ENDC}"
+        f"{BColors.OKGREEN}Current value: {BColors.ENDC}\n{BColors.OKBLUE}{value}{BColors.ENDC}"
     )
     print(
-        f"{bcolors.OKGREEN}Suggested type: {bcolors.ENDC}\n{bcolors.FAIL}PATH{bcolors.ENDC}"
+        f"{BColors.OKGREEN}Suggested type: {BColors.ENDC}\n{BColors.FAIL}PATH{BColors.ENDC}"
     )
-    new_value = input(f"{bcolors.OKGREEN}New value: \n{bcolors.ENDC}")
+    new_value = input(f"{BColors.OKGREEN}New value: \n{BColors.ENDC}")
     if check_path(new_value):
         env_vars[key] = new_value
         os.environ.update(env_vars)
         return selected
     else:
-        print(f"{bcolors.FAIL}Invalid path.{bcolors.ENDC}")
+        print(f"{BColors.FAIL}Invalid path.{BColors.ENDC}")
         return selected
 
 
@@ -436,7 +430,7 @@ def edit_path_group(selected):
     path_list = value.split(PATH_SEPARATOR)
 
     os.system(CLEAR_COMMAND)
-    print(f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}")
+    print(f"{BColors.OKGREEN}Current value: {BColors.ENDC}")
     print(
         'Move with "ws" or "jk". Add to rear with "a". Add to front with "A". Change order with "-=".'
     )
@@ -483,7 +477,7 @@ def edit_path_group(selected):
             path_list[selected_path_index] = new_path
 
         os.system(CLEAR_COMMAND)
-        print(f"{bcolors.OKGREEN}Current value: {bcolors.ENDC}")
+        print(f"{BColors.OKGREEN}Current value: {BColors.ENDC}")
         print(
             'Move with "ws" or "jk". Add to rear with "a". Add to front with "A". Change order with "-=".'
         )
@@ -506,7 +500,6 @@ def intelligent_edit_mode(selected):
     os.system(CLEAR_COMMAND)
     env_vars = get_environment_vars()
     env_list = list(env_vars.items())
-    key = env_list[selected][0]
     value = env_list[selected][1]
     vartype = recognize_type(value)
     if vartype == "undefined":
@@ -578,7 +571,7 @@ def select():
             # search
             search_str = input()
             found_flag = False
-            for index, (key, value) in enumerate(get_environment_vars().items()):
+            for index, (key, _value) in enumerate(get_environment_vars().items()):
                 if search_str.lower() in key.lower():
                     selected = index
                     search_list.append(index)
@@ -647,7 +640,7 @@ def conflict_checker(varname: str):
     current environment variables.
     """
     env_dict = get_environment_vars()
-    if varname not in env_dict.keys():
+    if varname not in env_dict:
         print(f"{varname} is not in the environment variables.")
         return 0
     if recognize_type(env_dict[varname]) != "path_group":
@@ -665,22 +658,20 @@ def conflict_checker(varname: str):
             )
             if len(intersection_exe) > 0:
                 print(
-                    f"Conflict found between {bcolors.OKBLUE} {path_list[index_i]} {bcolors.ENDC} and "
-                    f"{bcolors.OKBLUE} {path_list[index_j]} {bcolors.ENDC}."
-                    f" We will use executable in {bcolors.OKBLUE} {path_list[index_i]} {bcolors.ENDC} first."
+                    f"Conflict found between {BColors.OKBLUE} {path_list[index_i]} {BColors.ENDC} and "
+                    f"{BColors.OKBLUE} {path_list[index_j]} {BColors.ENDC}."
+                    f" We will use executable in {BColors.OKBLUE} {path_list[index_i]} {BColors.ENDC} first."
                 )
                 print("The following executables are in both:")
-                conflict_counter = 0
                 conflict_length = len(intersection_exe)
-                for exe in intersection_exe:
+                for conflict_counter, exe in enumerate(intersection_exe):
                     if conflict_counter == conflict_length - 1:
-                        print(f"{bcolors.FAIL}{exe}{bcolors.ENDC} .")
+                        print(f"{BColors.FAIL}{exe}{BColors.ENDC} .")
                         break
                     if conflict_counter == 20:
-                        print(f"{bcolors.FAIL}{exe}{bcolors.ENDC} ...")
+                        print(f"{BColors.FAIL}{exe}{BColors.ENDC} ...")
                         break
-                    print(f"{bcolors.FAIL}{exe}{bcolors.ENDC}", end=", ")
-                    conflict_counter += 1
+                    print(f"{BColors.FAIL}{exe}{BColors.ENDC}", end=", ")
     return 0
 
 
@@ -691,7 +682,7 @@ def optimize(varname: str):
     if there are duplicates in path group, we will remove the duplicates.
     """
     env_dict = get_environment_vars()
-    if varname not in env_dict.keys():
+    if varname not in env_dict:
         print(f"{varname} is not in the environment variables.")
         return 0
     if recognize_type(env_dict[varname]) != "path_group":
